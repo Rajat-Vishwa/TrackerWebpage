@@ -3,7 +3,7 @@
 <head>
     <title>GPS Tracker</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <script src="https://tracker-uxlz.onrender.com/socket.io/socket.io.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <style>
         body { font-family: Arial, sans-serif; }
         #map { height: 80vh; margin-bottom: 20px; }
@@ -26,7 +26,7 @@
         var map = L.map('map').setView([0, 0], 2);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
 
-        var socket = io("https://tracker-uxlz.onrender.com");
+        var socket = io(); // Initialize the socket connection without any arguments
         var markers = [];
         var markPoints = true;
 
