@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GPS Tracker</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://your-backend-service.onrender.com/socket.io/socket.io.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #map { height: 80vh; margin-bottom: 20px; }
+        .container { text-align: center; }
+        .button { padding: 10px 20px; cursor: pointer; margin: 5px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; }
+        .button:hover { background-color: #45a049; }
+        #status { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>GPS Tracker</h2>
+        <div id="map"></div>
+        <button class="button" onclick="toggleMarking()">Toggle Marking</button>
+        <button class="button" onclick="clearMarkers()">Clear Marked Points</button>
+        <div id="status">Waiting for data...</div>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('map').setView([0, 0], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
+
+        var socket = io("https://tracker-uxlz.onrender.com");
+        var markers = [];
+        var markPoints = true;
+
+        function addMarker(lat, lon) {
+            if (markPoints) {
+                var marker = L.marker([lat, lon]).addTo(map);
+                marker.bindPopup(`Lat: ${lat}, Lon: ${lon}`).openPopup();
+                markers.push(marker);
+            }
+            map.setView([lat, lon], 13);
+        }
+
+        function toggleMarking() {
+            markPoints = !markPoints;
+            document.getElementById("status").innerHTML = markPoints ? "Marking: ON" : "Marking: OFF";
+        }
+
+        function clearMarkers() {
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+        }
+
+        socket.on('locationUpdate', function(data) {
+            document.getElementById("status").innerHTML = `Received: Lat ${data.latitude}, Lon ${data.longitude}`;
+            addMarker(data.latitude, data.longitude);
+        });
+    </script>
+</body>
+</html>
