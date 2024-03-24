@@ -3,55 +3,57 @@
 <head>
     <title>GPS Tracker</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; }
-        #map { height: 80vh; margin-bottom: 20px; }
-        .container { text-align: center; }
-        .button { padding: 10px 20px; cursor: pointer; margin: 5px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        #map { height: 80vh; }
+        .container { text-align: center; margin-top: 20px; }
+        .button { background-color: #4CAF50; color: white; padding: 10px 20px; margin: 10px; border: none; border-radius: 5px; cursor: pointer; }
         .button:hover { background-color: #45a049; }
-        #status { margin-bottom: 20px; }
+        #status { font-size: 1.2em; }
     </style>
 </head>
 <body>
+    <div id="map"></div>
     <div class="container">
-        <h2>GPS Tracker</h2>
-        <div id="map"></div>
-        <button class="button" onclick="toggleMarking()">Toggle Marking</button>
-        <button class="button" onclick="clearMarkers()">Clear Marked Points</button>
+        <button id="toggleMarking" class="button">Toggle Marking</button>
+        <button id="clearMarkers" class="button">Clear Marked Points</button>
         <div id="status">Waiting for data...</div>
     </div>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
-        var map = L.map('map').setView([0, 0], 2);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
+        var map = L.map('map').setView([0, 0], 1);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
 
-        var socket = io(); // Initialize the socket connection without any arguments
+        var socket = io("https://tracker-uxlz.onrender.com");
         var markers = [];
         var markPoints = true;
 
-        function addMarker(lat, lon) {
-            if (markPoints) {
-                var marker = L.marker([lat, lon]).addTo(map);
-                marker.bindPopup(`Lat: ${lat}, Lon: ${lon}`).openPopup();
-                markers.push(marker);
-            }
-            map.setView([lat, lon], 13);
-        }
-
-        function toggleMarking() {
-            markPoints = !markPoints;
-            document.getElementById("status").innerHTML = markPoints ? "Marking: ON" : "Marking: OFF";
-        }
-
-        function clearMarkers() {
-            markers.forEach(marker => map.removeLayer(marker));
-            markers = [];
-        }
-
         socket.on('locationUpdate', function(data) {
-            document.getElementById("status").innerHTML = `Received: Lat ${data.latitude}, Lon ${data.longitude}`;
-            addMarker(data.latitude, data.longitude);
+            var lat = data.latitude;
+            var lon = data.longitude;
+            var message = data.message || "Location data";
+            document.getElementById("status").innerHTML = `Received: Lat ${lat}, Lon ${lon}, Message: ${message}`;
+            
+            if (markPoints) {
+                var marker = L.marker([lat, lon]).addTo(map).bindPopup(message);
+                markers.push(marker);
+                map.setView([lat, lon], 10);
+            }
+        });
+
+        document.getElementById("toggleMarking").addEventListener("click", function() {
+            markPoints = !markPoints;
+            this.textContent = markPoints ? "Stop Marking" : "Start Marking";
+        });
+
+        document.getElementById("clearMarkers").addEventListener("click", function() {
+            markers.forEach(function(marker) {
+                map.removeLayer(marker);
+            });
+            markers = [];
         });
     </script>
 </body>
