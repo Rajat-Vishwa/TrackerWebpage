@@ -37,7 +37,7 @@
             var message = data.message || "Location data";
             document.getElementById("status").innerHTML = `Received: Lat ${lat}, Lon ${lon}, Message: ${message}`;
             map.setView([lat, lon], 10);
-
+            L.marker([lat, lon]).addTo(map).bindPopup(message);
             if (markPoints) {
                 var marker = L.marker([lat, lon]).addTo(map).bindPopup(message);
                 markers.push(marker);
